@@ -1,9 +1,9 @@
 #include "LargeNumber.h"
 
-void convertIntBitList(unsigned int value, bitLink *&first, bitLink *&last) {
+void convertIntBitList(unsigned long long value, bitLink *&first, bitLink *&last) {
 	bitLink *lastSaved = NULL;
-	for (int i = sizeof(int) * 8 - 1; i >= 0; --i) {
-		unsigned int test = 1 << i;	//pow(2, i);
+	for (int i = sizeof(unsigned long long) * 8 - 1; i >= 0; --i) {
+		unsigned long long test = 1ULL << i;	//pow(2, i);
 		if (value >= test) {
 			value -= test;
 			if(lastSaved != NULL) {
@@ -17,12 +17,11 @@ void convertIntBitList(unsigned int value, bitLink *&first, bitLink *&last) {
 	}
 	first = lastSaved;
 }
-void LargeNumber::fromInt(const int value) {
+void LargeNumber::fromInt(const unsigned long long value,  const bool _isPostive) {
 	//Dealing with just postive numbers
-	isPostive = value >= 0;
-	int v = value * (isPostive ? 1 : -1);
+	isPostive = _isPostive;
 	//Coverting value binary
-	convertIntBitList(v, leastSB, mostSB);
+	convertIntBitList(value, leastSB, mostSB);
 }
 void LargeNumber::fromLargeNumber(const LargeNumber &other) {
 	leastSB = new bitLink(other.leastSB->value, NULL, NULL);
@@ -38,8 +37,15 @@ void LargeNumber::fromLargeNumber(const LargeNumber &other) {
 	isPostive = other.isPostive;
 }
 
-LargeNumber::LargeNumber(const int value) {
-	fromInt(value);
+LargeNumber::LargeNumber(const long long value) {
+	unsigned long long posValue = value;
+	if(value < 0) {
+		posValue *= -1;
+	}
+	fromInt(posValue, value > 0);
+}
+LargeNumber::LargeNumber(const unsigned long long value, const bool _isPostive) {
+	fromInt(value, _isPostive);
 }
 LargeNumber::LargeNumber(const LargeNumber &value) {
 	fromLargeNumber(value);
@@ -59,8 +65,17 @@ LargeNumber::~LargeNumber() {
 	leastSB = NULL;
 	mostSB = NULL;
 }
-LargeNumber& LargeNumber::operator=(const int other) {
-	fromInt(other);
+
+LargeNumber& LargeNumber::operator=(const long long other) {
+	unsigned long long posValue = other;
+	if(other < 0) {
+		posValue *= -1;
+	}
+	fromInt(posValue, other > 0);
+	return *this;
+}
+LargeNumber& LargeNumber::operator=(const unsigned long long other) {
+	fromInt(other, true);
 	return *this;
 }
 LargeNumber& LargeNumber::operator=(const LargeNumber &other) {
@@ -81,34 +96,41 @@ LargeNumber LargeNumber::operator+(const LargeNumber &right) {
 
 }*/
 std::string LargeNumber::toBinaryString() const {
-	std::string str = isPostive ? "" : "-";
+	if(leastSB == NULL) {
+		return "NULL";
+	}
+	std::string str = "";
 	bitLink *toStr = leastSB;
 	while (toStr != NULL) {
-		str.insert(1, toStr->value ? "1" : "0");
+		str.insert(0, toStr->value ? "1" : "0");
 		toStr = toStr->next;
-	}
-	if(str == "") {
-		str = "NULL";
 	}
 	return str;
 }
-int charToNumber(char c) {
-	return (int)c - 48; //ascii 48 = 0
+int charToNumber(const char c) {
+	//Must be a Number between 0-9
+	if(c < 48 || c > 57) {
+		return -1;
+	}
+	return (int)c - 48; //ascii 48f  = 0
 }
-//Value must be 0-9
-char NumberToChar(int value) {
+char NumberToChar(const int value) {
+	//Value must be 0-9
+	if(value < 0 || value > 9) {
+		return 'E';
+	}
 	return (char)(value + 48); //ascii 48 = 0
 }
-void addValueToString(int value, std::string &string) {
-	int i = string.length() - 1;
+void addValueToString(int value, int place, std::string &string) {
+	int i = string.length() - 1 - place;
 	while(value) {
 		//Hit the top of the numbers
 		if(i == -1) {
 			while(value > 0) {
-				int removeNumber = value % 10;
-				char replaceChar = NumberToChar(removeNumber);
-				string.insert(0, &replaceChar);
-				value -= removeNumber;
+				int adding = value % 10;
+				char addingChar = NumberToChar(adding);
+				string = addingChar + string;
+				value -= adding;
 				value /= 10;
 			}
 			return;
@@ -116,49 +138,51 @@ void addValueToString(int value, std::string &string) {
 		value += charToNumber(string[i]);
 		//put it back in to the string
 		int removeNumber = value % 10;
-		char replaceChar = NumberToChar(removeNumber);
-		string.replace(i, 1, &replaceChar);
+		string[i] = NumberToChar(removeNumber);
 		value -= removeNumber;
 		//Finshed the place, moving up the decimal
 		value /= 10;
 		--i;
 	}
 }
-
 void muitply2String(std::string &string) {
-	std::string oringalString = string;
+	const std::string oringalString(string);
 	//adding the first number with itself and moving up
-	for(int i = string.length() - 1; i >= 0; --i) {
-		int place = ((string.length() - i) * 10);
-		place = place ? place : 1; //zero's place is really ones
-		addValueToString(NumberToChar(oringalString[i]) * place, string);
+	for(int i = oringalString.length() - 1; i >= 0; --i) {
+		//Power of 10
+		int place = ((oringalString.length() - 1)- i);
+		addValueToString(charToNumber(oringalString[i]), place, string);
 	}
 }
 std::string LargeNumber::toDecString() const {
+	if(mostSB == NULL) {
+		return "NULL";
+	}
 	//http://www.robotroom.com/NumberSystems2.html
 	//step - 1 staritng with 0
 	std::string str = "0";
-	//Step - 2 taking the MSB
+	//Step - 2.1 taking the MSB
 	bitLink *toStr = mostSB;
 	//Step - 3 stoping
 	while (toStr != NULL) {
-		//step 2 - adding the MSB if it's a 1
-		addValueToString(toStr->value, str);
 		//Step 4 - Muiplying by 2
 		muitply2String(str);
-		//Step - 2 taking the next MSB
+		//step 2.2 - adding the MSB if it's a 1
+		addValueToString(toStr->value, 0, str);
+		//Step - 2.1 taking the next MSB
 		toStr = toStr->previous;
-	}
-
-	if(str == "") {
-		str = "NULL";
 	}
 	return str;
 }
 std::string LargeNumber::toString(bool isBinary) const {
+	std::string s;
 	if(isBinary) {
-		return toBinaryString();
+		s = toBinaryString();
 	} else {
-		return toDecString();
+		s = toDecString();
 	}
+	if(!isPostive) {
+		s.insert(0, "-");
+	}
+	return s;
 }

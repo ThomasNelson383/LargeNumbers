@@ -1,9 +1,14 @@
 #include "LargeNumber.h"
 #include <iostream>
 
+using namespace std;
+
 int main(int argc, char **argv) {
-	LargeNumber ln = -521385;
-	std::cout << ln.toString();
+	long long numberToConvert = 6849846827558465456;
+	cout << numberToConvert   << endl;
+	LargeNumber ln(numberToConvert);
+	cout << ln.toString(true) << " is " << ln.toString(true).length() << endl;
+	cout << ln.toString() 	  << " is " << ln.toString().length()     << endl;
 
 	//unsigned int x = 1;
 	//x = x << 31; // use operator<< for left shift

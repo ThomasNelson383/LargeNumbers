@@ -16,12 +16,14 @@ struct bitLink {
 
 class LargeNumber {
 public:
-	LargeNumber(const int value = 0);
+	LargeNumber(const long long value = 0LL);
+	LargeNumber(const unsigned long long value, const bool _isPostive = true);
 	LargeNumber(const std::string &value);	//a dec string
 	LargeNumber(const LargeNumber &value);	//Copy Contector
 	~LargeNumber();
 
-	LargeNumber& operator=(const int other);
+	LargeNumber& operator=(const long long other);
+	LargeNumber& operator=(const unsigned long long other);
 	LargeNumber& operator=(const LargeNumber &other);
 
 	/*LargeNumber operator*(const int right);
@@ -37,7 +39,7 @@ private:
 	bitLink *leastSB = NULL;
 	bitLink *mostSB = NULL;
 
-	void fromInt(const int value);
+	void fromInt(const unsigned long long value, const bool _isPostive);
 	void fromLargeNumber(const LargeNumber &other);
 
 	std::string toBinaryString() const;
