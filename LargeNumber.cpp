@@ -44,6 +44,9 @@ LargeNumber::LargeNumber(const int value) {
 LargeNumber::LargeNumber(const LargeNumber &value) {
 	fromLargeNumber(value);
 }
+LargeNumber::LargeNumber(const std::string &value) {
+
+}
 LargeNumber::~LargeNumber() {
 	bitLink *toDelete = leastSB;
 	while (toDelete != NULL) {
@@ -77,7 +80,7 @@ LargeNumber LargeNumber::operator+(const int right) {
 LargeNumber LargeNumber::operator+(const LargeNumber &right) {
 
 }*/
-std::string LargeNumber::toString() const {
+std::string LargeNumber::toBinaryString() const {
 	std::string str = isPostive ? "" : "-";
 	bitLink *toStr = leastSB;
 	while (toStr != NULL) {
@@ -88,4 +91,74 @@ std::string LargeNumber::toString() const {
 		str = "NULL";
 	}
 	return str;
+}
+int charToNumber(char c) {
+	return (int)c - 48; //ascii 48 = 0
+}
+//Value must be 0-9
+char NumberToChar(int value) {
+	return (char)(value + 48); //ascii 48 = 0
+}
+void addValueToString(int value, std::string &string) {
+	int i = string.length() - 1;
+	while(value) {
+		//Hit the top of the numbers
+		if(i == -1) {
+			while(value > 0) {
+				int removeNumber = value % 10;
+				char replaceChar = NumberToChar(removeNumber);
+				string.insert(0, &replaceChar);
+				value -= removeNumber;
+				value /= 10;
+			}
+			return;
+		}
+		value += charToNumber(string[i]);
+		//put it back in to the string
+		int removeNumber = value % 10;
+		char replaceChar = NumberToChar(removeNumber);
+		string.replace(i, 1, &replaceChar);
+		value -= removeNumber;
+		//Finshed the place, moving up the decimal
+		value /= 10;
+		--i;
+	}
+}
+
+void muitply2String(std::string &string) {
+	std::string oringalString = string;
+	//adding the first number with itself and moving up
+	for(int i = string.length() - 1; i >= 0; --i) {
+		int place = ((string.length() - i) * 10);
+		place = place ? place : 1; //zero's place is really ones
+		addValueToString(NumberToChar(oringalString[i]) * place, string);
+	}
+}
+std::string LargeNumber::toDecString() const {
+	//http://www.robotroom.com/NumberSystems2.html
+	//step - 1 staritng with 0
+	std::string str = "0";
+	//Step - 2 taking the MSB
+	bitLink *toStr = mostSB;
+	//Step - 3 stoping
+	while (toStr != NULL) {
+		//step 2 - adding the MSB if it's a 1
+		addValueToString(toStr->value, str);
+		//Step 4 - Muiplying by 2
+		muitply2String(str);
+		//Step - 2 taking the next MSB
+		toStr = toStr->previous;
+	}
+
+	if(str == "") {
+		str = "NULL";
+	}
+	return str;
+}
+std::string LargeNumber::toString(bool isBinary) const {
+	if(isBinary) {
+		return toBinaryString();
+	} else {
+		return toDecString();
+	}
 }
