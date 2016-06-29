@@ -1,8 +1,8 @@
 #include "LargeNumber.h"
 
-void convertIntBitList(unsigned int value, bitLink *first, bitLink *last) {
+void convertIntBitList(unsigned int value, bitLink *&first, bitLink *&last) {
 	bitLink *lastSaved = NULL;
-	for (int i = sizeof(int) * 8 - 1; i >= 0 && value > 0; --i) {
+	for (int i = sizeof(int) * 8 - 1; i >= 0; --i) {
 		unsigned int test = 1 << i;	//pow(2, i);
 		if (value >= test) {
 			value -= test;
@@ -22,7 +22,7 @@ void LargeNumber::fromInt(const int value) {
 	isPostive = value >= 0;
 	int v = value * (isPostive ? 1 : -1);
 	//Coverting value binary
-	convertIntBitList(v, leastSB, leastSB);
+	convertIntBitList(v, leastSB, mostSB);
 }
 void LargeNumber::fromLargeNumber(const LargeNumber &other) {
 	leastSB = new bitLink(other.leastSB->value, NULL, NULL);
@@ -78,14 +78,11 @@ LargeNumber LargeNumber::operator+(const LargeNumber &right) {
 
 }*/
 std::string LargeNumber::toString() const {
-	std::string str = "";
+	std::string str = isPostive ? "" : "-";
 	bitLink *toStr = leastSB;
 	while (toStr != NULL) {
-		str.insert(0, toStr->value ? "1" : "0");
+		str.insert(1, toStr->value ? "1" : "0");
 		toStr = toStr->next;
-	}
-	if (!isPostive) {
-		str.append("-");
 	}
 	if(str == "") {
 		str = "NULL";

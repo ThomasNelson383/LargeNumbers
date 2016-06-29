@@ -2,7 +2,7 @@
 #include <iostream>
 
 int main(int argc, char **argv) {
-	LargeNumber ln = 2;
+	LargeNumber ln = -521385;
 	std::cout << ln.toString();
 
 	//unsigned int x = 1;
